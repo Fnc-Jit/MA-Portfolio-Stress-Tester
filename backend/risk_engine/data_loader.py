@@ -43,7 +43,9 @@ def fetch_prices(tickers: list[str], start: str = "2005-01-01", end: str | None 
     
     if cache_path.exists():
         logger.info(f"Loading prices from cache: {cache_path.name}")
-        return pd.read_parquet(cache_path)
+        prices = pd.read_parquet(cache_path)
+        prices.index = strip_timezone(prices.index)
+        return prices
     
     logger.info(f"Downloading prices for {sorted_tickers} from {start} to {end_str}")
     # Use yfinance download
@@ -173,6 +175,7 @@ def fetch_macro_factors(fred_api_key: str | None = None, start: str = "2005-01-0
     if cache_path.exists():
         logger.info(f"Loading macro factors from cache: {cache_path.name}")
         df = pd.read_parquet(cache_path)
+        df.index = strip_timezone(df.index)
         # Reindex to match target_dates if provided
         return df.reindex(target_dates).ffill().bfill()
         

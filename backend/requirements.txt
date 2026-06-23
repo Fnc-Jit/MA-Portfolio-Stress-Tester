@@ -10,3 +10,4 @@ weasyprint
 jinja2
 pytest
 pyarrow
+xhtml2pdf

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,10 @@ export default function Dashboard() {
   const [tickers, setTickers] = useState<string[]>(["AAPL", "MSFT", "GOOGL"]);
   const [weights, setWeights] = useState<number[]>([0.4, 0.35, 0.25]);
   const [portfolioValue, setPortfolioValue] = useState(100000);
+  
+  // Client details for reports
+  const [clientName, setClientName] = useState<string>("");
+  const [clientAge, setClientAge] = useState<number | null>(null);
   
   // Risk configuration parameters
   const [lookbackDays, setLookbackDays] = useState(504);
@@ -240,7 +244,9 @@ export default function Dashboard() {
       portfolio_value: portfolioValue,
       lookback_days: lookbackDays,
       shocks,
-      risk_free_rate: riskFreeRate
+      risk_free_rate: riskFreeRate,
+      name: clientName || undefined,
+      age: clientAge !== null ? clientAge : undefined,
     });
   };
 
@@ -320,7 +326,7 @@ export default function Dashboard() {
         <div className="border-b border-border/50 bg-card/30">
           <div className="container py-6">
             <div className="grid md:grid-cols-4 gap-6">
-              {/* Portfolio Value & Lookback */}
+              {/* Portfolio Value & Lookback & Client Info */}
               <div className="space-y-4">
                 <div>
                   <Label className="text-sm font-medium">Portfolio Value ($)</Label>
@@ -343,20 +349,42 @@ export default function Dashboard() {
                     <option value={1260}>5 Years (1260 days)</option>
                   </select>
                 </div>
+                <div>
+                  <Label className="text-sm font-medium">Client Name</Label>
+                  <Input
+                    type="text"
+                    placeholder="Jane Doe (Optional)"
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
+                    className="mt-1 bg-background border-border/50 text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Client Age</Label>
+                  <Input
+                    type="number"
+                    placeholder="35 (Optional)"
+                    value={clientAge !== null ? clientAge : ""}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      setClientAge(isNaN(val) ? null : val);
+                    }}
+                    className="mt-1 bg-background border-border/50 text-sm numeric"
+                  />
+                </div>
               </div>
 
               {/* Holdings */}
               <div className="md:col-span-3">
                 <Label className="text-sm font-medium">Holdings Allocation</Label>
-                <div className="space-y-2 mt-2 max-h-[250px] overflow-y-auto pr-2">
+                <div className="space-y-2 mt-2 max-h-[350px] overflow-y-visible pr-2">
                   {tickers.map((ticker, idx) => (
                     <div key={idx} className="flex gap-2 items-end">
                       <div className="flex-1">
-                        <Input
+                        <TickerAutocomplete
                           placeholder="Stock Ticker (e.g. SPY, AAPL)"
                           value={ticker}
-                          onChange={(e) => handleTickerChange(idx, e.target.value)}
-                          className="bg-background border-border/50 text-sm"
+                          onChange={(val) => handleTickerChange(idx, val)}
                         />
                       </div>
                       <div className="w-24">
@@ -373,7 +401,7 @@ export default function Dashboard() {
                           variant="ghost"
                           size="sm"
                           onClick={() => removeHolding(idx)}
-                          className="text-destructive hover:bg-destructive/10"
+                          className="text-destructive hover:bg-destructive/10 border-0 self-center"
                         >
                           ×
                         </Button>
@@ -542,3 +570,110 @@ function RiskSummaryCard({
     </Card>
   );
 }
+
+/**
+ * Common Stock Tickers for Auto-Reference Autocomplete
+ */
+const COMMON_TICKERS = [
+  { symbol: "AAPL", name: "Apple Inc." },
+  { symbol: "MSFT", name: "Microsoft Corporation" },
+  { symbol: "GOOGL", name: "Alphabet Inc." },
+  { symbol: "AMZN", name: "Amazon.com Inc." },
+  { symbol: "NVDA", name: "NVIDIA Corporation" },
+  { symbol: "META", name: "Meta Platforms Inc." },
+  { symbol: "TSLA", name: "Tesla Inc." },
+  { symbol: "SPY", name: "SPDR S&P 500 ETF Trust" },
+  { symbol: "QQQ", name: "Invesco QQQ Trust" },
+  { symbol: "JPM", name: "JPMorgan Chase & Co." },
+  { symbol: "V", name: "Visa Inc." },
+  { symbol: "DIS", name: "The Walt Disney Company" },
+  { symbol: "NFLX", name: "Netflix Inc." },
+  { symbol: "BRK.B", name: "Berkshire Hathaway Inc. Class B" },
+  { symbol: "UNH", name: "UnitedHealth Group Incorporated" },
+  { symbol: "JNJ", name: "Johnson & Johnson" },
+  { symbol: "XOM", name: "Exxon Mobil Corporation" },
+  { symbol: "WMT", name: "Walmart Inc." },
+  { symbol: "PG", name: "Procter & Gamble Company" },
+  { symbol: "HD", name: "The Home Depot Inc." },
+  { symbol: "BAC", name: "Bank of America Corporation" },
+  { symbol: "KO", name: "The Coca-Cola Company" },
+  { symbol: "PEP", name: "PepsiCo Inc." },
+  { symbol: "COST", name: "Costco Wholesale Corporation" },
+  { symbol: "AMD", name: "Advanced Micro Devices Inc." },
+  { symbol: "LLY", name: "Eli Lilly and Company" },
+  { symbol: "PFE", name: "Pfizer Inc." },
+  { symbol: "MRK", name: "Merck & Co. Inc." },
+  { symbol: "TGT", name: "Target Corporation" },
+  { symbol: "NKE", name: "NIKE Inc." },
+  { symbol: "CVX", name: "Chevron Corporation" },
+  { symbol: "NEE", name: "NextEra Energy Inc." },
+  { symbol: "IWM", name: "iShares Russell 2000 ETF" },
+  { symbol: "DIA", name: "SPDR Dow Jones Industrial Average ETF Trust" },
+];
+
+interface TickerAutocompleteProps {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+}
+
+function TickerAutocomplete({ value, onChange, placeholder }: TickerAutocompleteProps) {
+  const [suggestions, setSuggestions] = useState<Array<{ symbol: string; name: string }>>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!value.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    const query = value.toUpperCase();
+    const filtered = COMMON_TICKERS.filter(
+      (item) => item.symbol.startsWith(query) || item.name.toUpperCase().includes(query)
+    ).slice(0, 5);
+    setSuggestions(filtered);
+  }, [value]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <Input
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setIsOpen(true);
+        }}
+        onFocus={() => setIsOpen(true)}
+        className="bg-background border-border/50 text-sm w-full"
+      />
+      {isOpen && suggestions.length > 0 && (
+        <ul className="absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-card border border-border/80 rounded-md shadow-lg z-50 py-1 text-xs">
+          {suggestions.map((item) => (
+            <li
+              key={item.symbol}
+              onClick={() => {
+                onChange(item.symbol);
+                setIsOpen(false);
+              }}
+              className="px-3 py-2 hover:bg-accent/15 cursor-pointer flex justify-between items-center text-foreground transition-colors"
+            >
+              <span className="font-bold text-accent">{item.symbol}</span>
+              <span className="text-muted-foreground truncate max-w-[150px]">{item.name}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+

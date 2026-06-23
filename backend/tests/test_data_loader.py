@@ -4,6 +4,11 @@ import numpy as np
 from unittest.mock import patch, MagicMock
 from risk_engine.data_loader import fetch_macro_factors, generate_synthetic_macro, fetch_prices
 
+@pytest.fixture(autouse=True)
+def temp_cache_dir(tmp_path):
+    with patch("risk_engine.data_loader.CACHE_DIR", tmp_path):
+        yield
+
 def test_fetch_macro_factors_synthetic_fallback():
     """
     Test that fetch_macro_factors falls back to synthetic generation

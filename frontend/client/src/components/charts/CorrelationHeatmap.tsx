@@ -62,7 +62,7 @@ export default function CorrelationHeatmap({ data, tickers }: CorrelationHeatmap
                       className="text-center p-2 numeric font-semibold text-xs border-b border-border/30"
                       style={{
                         backgroundColor: getColor(value),
-                        color: value === 1 ? "hsl(var(--accent))" : "hsl(var(--foreground))",
+                        color: value === 1 ? "var(--accent)" : "var(--foreground)",
                         transition: "background-color 0.2s ease",
                       }}
                     >

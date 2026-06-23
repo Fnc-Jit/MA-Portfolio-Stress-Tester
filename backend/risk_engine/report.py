@@ -192,7 +192,12 @@ HTML_TEMPLATE = """
 
     <div class="header">
         <h1>PORTFOLIO STRESS TEST & RISK REPORT</h1>
-        <div class="meta">Generated: {{ date }} | Portfolio Value: ${{ "{:,.2f}".format(portfolio_value) }} | Lookback: {{ lookback_days }} days</div>
+        <div class="meta">
+            Generated: {{ date }} | Portfolio Value: ${{ "{:,.2f}".format(portfolio_value) }} | Lookback: {{ lookback_days }} days
+            {% if name or age %}
+            <br/>Prepared For: {% if name %}{{ name }}{% endif %}{% if age %} (Age: {{ age }}){% endif %}
+            {% endif %}
+        </div>
     </div>
 
     {% if agreement.fat_tail_presence != 'LOW' %}
@@ -391,7 +396,8 @@ def generate_pdf_report(data: Dict[str, Any], output_path: str) -> bool:
     """
     Generates a PDF from the report data.
     If WeasyPrint is available, outputs a PDF.
-    Otherwise, writes a static HTML report to output_path + '.html' and returns False.
+    Otherwise, uses xhtml2pdf as a fallback to output a PDF.
+    If both fail, writes a static HTML report to output_path + '.html' and returns False.
     """
     html_content = generate_html_report(data)
     
@@ -401,7 +407,24 @@ def generate_pdf_report(data: Dict[str, Any], output_path: str) -> bool:
             HTML(string=html_content).write_pdf(output_path)
             return True
         except Exception as e:
-            logger.error(f"WeasyPrint failed to render PDF: {str(e)}. Falling back to writing HTML report.")
+            logger.error(f"WeasyPrint failed to render PDF: {str(e)}. Falling back to xhtml2pdf...")
+            
+    # Fallback to xhtml2pdf (pure Python)
+    try:
+        logger.info(f"Rendering PDF report to {output_path} via xhtml2pdf...")
+        from xhtml2pdf import pisa
+        with open(output_path, "w+b") as result_file:
+            pisa_status = pisa.CreatePDF(html_content, dest=result_file)
+        if not pisa_status.err:
+            return True
+        else:
+            logger.error(f"xhtml2pdf error code: {pisa_status.err}. Falling back to writing HTML report.")
+            if os.path.exists(output_path):
+                os.remove(output_path)
+    except Exception as e:
+        logger.error(f"xhtml2pdf failed to render PDF: {str(e)}. Falling back to writing HTML report.")
+        if os.path.exists(output_path):
+            os.remove(output_path)
             
     # Fallback to HTML
     html_fallback_path = output_path

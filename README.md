@@ -8,15 +8,16 @@ A production-grade, institutional-scale market risk management platform. This sy
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        FRONTEND CLIENT (Next.js)                       │
-│  - Captures Tickers, Weights, Historical Lookback, & Custom Shocks      │
-│  - Renders Interactive charts via Plotly JSON response                 │
-│  - Requests PDF reports by passing base64 Plotly SVGs                  │
+│                     FRONTEND CLIENT (React / Vite)                     │
+│  - Captures Tickers, Weights, Horizon, Client Name, Client Age, Shocks │
+│  - Renders Interactive charts via Recharts components                  │
+│  - Displays Stock Ticker Autocomplete suggestions while typing         │
+│  - Requests PDF reports from the backend                               │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ HTTP POST (JSON Payload)
 ┌───────────────────────────────────▼────────────────────────────────────┐
 │                        BACKEND API (FastAPI)                           │
-│  - Validates portfolio tickers & weights (sum to 100%)                 │
+│  - Validates portfolio tickers, weights (sum to 100%), name & age       │
 │  - Exposes /portfolio/validate, /risk/compute, and /risk/report        │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ Orchestrates modules
@@ -42,7 +43,8 @@ A production-grade, institutional-scale market risk management platform. This sy
 │   │ 3. METRICS & ANALYSIS (metrics.py & report.py)                 │   │
 │   │    - Evaluates Sharpe Ratio, Annualized Volatility, Drawdowns  │   │
 │   │    - Cross-validates models & checks for tail risk anomalies   │   │
-│   │    - Renders HTML/PDF memos via Jinja2 & WeasyPrint            │   │
+│   │    - Renders PDF reports using WeasyPrint (with xhtml2pdf      │   │
+│   │      fallback if native system libraries are missing)          │   │
 │   └────────────────────────────────────────────────────────────────┘   │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -171,13 +173,13 @@ When you run the testing kit, the terminal displays the following execution log:
 platform darwin -- Python 3.13.5, pytest-9.1.1, pluggy-1.6.0
 rootdir: /Users/jit/Documents/port
 plugins: anyio-4.14.0
-collected 8 items
+collected 9 items
 
-tests/test_data_loader.py ...                                                        [ 37%]
-tests/test_historical_replay.py .                                                    [ 50%]
-tests/test_monte_carlo_var.py ..                                                     [ 75%]
-tests/test_parametric_var.py .                                                       [ 87%]
-tests/test_report_fallback.py .                                                      [100%]
+tests/test_data_loader.py ...                                                        [ 33%]
+tests/test_historical_replay.py .                                                    [ 44%]
+tests/test_monte_carlo_var.py ..                                                     [ 66%]
+tests/test_parametric_var.py .                                                       [ 77%]
+tests/test_report_fallback.py ..                                                     [100%]
 
 ==================================== ERRORS/FAILURES =====================================
 (None - All tests passed successfully)
@@ -197,10 +199,12 @@ tests/test_report_fallback.py .                                                 
   -> PASSED: Verified MC normal returns converge to analytical VaR limits (<5% tolerance).
 • test_parametric_var_math:
   -> PASSED: Verified portfolio expected returns and volatility calculations.
-• test_report_fallback:
-  -> PASSED: Verified WeasyPrint fail states default cleanly to HTML report output.
+• test_report_html_fallback: 
+  -> PASSED: Verified that the engine defaults cleanly to HTML report output when both renderers fail.
+• test_report_pdf_generation_xhtml2pdf_fallback:
+  -> PASSED: Verified automatic fallback to xhtml2pdf when WeasyPrint is missing, generating a valid PDF file.
 
-================================ 8 passed in 5.14 seconds =================================
+================================ 9 passed in 1.10 seconds =================================
 ```
 
 ---

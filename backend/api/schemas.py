@@ -54,3 +54,6 @@ class ReportGenerateRequest(RiskComputeRequest):
         None, 
         description="Optional base64 PNG data-URIs for charts, keys: 'pnl_dist', 'drawdowns'"
     )
+    name: Optional[str] = Field(None, description="Optional customer/manager name")
+    age: Optional[int] = Field(None, description="Optional customer/manager age")
+

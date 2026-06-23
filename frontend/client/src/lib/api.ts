@@ -9,6 +9,8 @@ export interface RiskRequest {
   lookback_days: number;
   shocks: Record<string, number>;
   risk_free_rate: number;
+  name?: string;
+  age?: number;
 }
 
 export interface ReplayPathPoint {

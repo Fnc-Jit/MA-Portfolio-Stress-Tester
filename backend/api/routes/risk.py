@@ -7,6 +7,7 @@ from typing import Dict, Any
 
 from api.schemas import RiskComputeRequest, ReportGenerateRequest
 import risk_engine
+from risk_engine.report import generate_pdf_report
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/risk", tags=["risk"])
@@ -125,7 +126,9 @@ async def generate_risk_report(payload: ReportGenerateRequest):
         "factor_shocks": results["factor_shocks"],
         "agreement": results["agreement"],
         "crises": list(results["historical_replays"].values()),
-        "charts": payload.charts  # Inject client side base64 Plotly PNGs if sent
+        "charts": payload.charts,  # Inject client side base64 Plotly PNGs if sent
+        "name": payload.name,
+        "age": payload.age
     }
     
     # Create a temporary file
@@ -133,27 +136,26 @@ async def generate_risk_report(payload: ReportGenerateRequest):
     temp_filename = next(tempfile._get_candidate_names())
     
     try:
-        # Check if WeasyPrint is available
-        from risk_engine.report import WEASYPRINT_AVAILABLE
+        pdf_path = os.path.join(temp_dir, f"{temp_filename}.pdf")
+        success = generate_pdf_report(report_data, pdf_path)
         
-        if WEASYPRINT_AVAILABLE:
-            pdf_path = os.path.join(temp_dir, f"{temp_filename}.pdf")
-            success = risk_engine.report.generate_pdf_report(report_data, pdf_path)
-            if success and os.path.exists(pdf_path):
-                return FileResponse(
-                    path=pdf_path,
-                    media_type="application/pdf",
-                    filename="portfolio_risk_report.pdf"
-                )
-                
-        # Fallback to HTML file download/display
-        html_path = os.path.join(temp_dir, f"{temp_filename}.html")
-        risk_engine.report.generate_pdf_report(report_data, html_path)
-        return FileResponse(
-            path=html_path,
-            media_type="text/html",
-            filename="portfolio_risk_report.html"
-        )
+        if success and os.path.exists(pdf_path):
+            return FileResponse(
+                path=pdf_path,
+                media_type="application/pdf",
+                filename="portfolio_risk_report.pdf"
+            )
+            
+        # Fallback to HTML file if PDF generation failed
+        html_path = pdf_path if pdf_path.endswith(".html") else f"{pdf_path}.html"
+        if os.path.exists(html_path):
+            return FileResponse(
+                path=html_path,
+                media_type="text/html",
+                filename="portfolio_risk_report.html"
+            )
+            
+        raise HTTPException(status_code=500, detail="Failed to render any report files.")
         
     except Exception as e:
         logger.error(f"Failed to generate report file: {str(e)}")

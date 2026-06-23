@@ -38,30 +38,30 @@ export default function FactorTornadoChart({
           layout="vertical"
           margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis
             type="number"
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+            tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
             tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
           />
           <YAxis
             dataKey="factor"
             type="category"
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+            tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
             width={190}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "hsl(var(--card))",
-              border: "1px solid hsl(var(--border))",
+              backgroundColor: "var(--card)",
+              border: "1px solid var(--border)",
               borderRadius: "0.5rem",
             }}
-            labelStyle={{ color: "hsl(var(--foreground))" }}
+            labelStyle={{ color: "var(--foreground)" }}
             formatter={(value: number) => `$${value.toFixed(0)}`}
           />
           <Bar
             dataKey="impact"
-            fill="hsl(var(--accent))"
+            fill="var(--accent)"
             radius={[0, 4, 4, 0]}
           />
         </BarChart>

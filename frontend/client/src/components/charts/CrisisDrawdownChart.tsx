@@ -35,25 +35,25 @@ export default function CrisisDrawdownChart({
       </div>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis
             dataKey="date"
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+            tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
           />
           <YAxis
             tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+            tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "hsl(var(--card))",
-              border: "1px solid hsl(var(--border))",
+              backgroundColor: "var(--card)",
+              border: "1px solid var(--border)",
               borderRadius: "0.5rem",
             }}
-            labelStyle={{ color: "hsl(var(--foreground))" }}
+            labelStyle={{ color: "var(--foreground)" }}
             formatter={(value: number) => `${(value * 100).toFixed(2)}%`}
           />
-          <Legend wrapperStyle={{ color: "hsl(var(--muted-foreground))" }} />
+          <Legend wrapperStyle={{ color: "var(--muted-foreground)" }} />
           <Line
             type="monotone"
             dataKey="gfc2008"

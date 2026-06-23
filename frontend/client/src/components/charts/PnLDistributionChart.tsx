@@ -37,29 +37,29 @@ export default function PnLDistributionChart({ data }: PnLDistributionChartProps
       ) : (
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis
               dataKey="range"
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 9 }}
               interval="preserveStartEnd"
             />
             <YAxis
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                backgroundColor: "var(--card)",
+                border: "1px solid var(--border)",
                 borderRadius: "0.5rem",
               }}
-              labelStyle={{ color: "hsl(var(--foreground))", fontSize: 12 }}
+              labelStyle={{ color: "var(--foreground)", fontSize: 12 }}
               itemStyle={{ fontSize: 12 }}
             />
-            <Legend wrapperStyle={{ color: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+            <Legend wrapperStyle={{ color: "var(--muted-foreground)", fontSize: 12 }} />
             <Bar
               dataKey="normal"
               fill="rgba(212, 175, 55, 0.4)"
-              stroke="hsl(var(--accent))"
+              stroke="var(--accent)"
               strokeWidth={1.5}
               name="Normal MC"
               radius={[2, 2, 0, 0]}

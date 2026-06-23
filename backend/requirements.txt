@@ -1,0 +1,12 @@
+pandas
+numpy
+scipy
+yfinance
+fredapi
+fastapi
+uvicorn
+pydantic
+weasyprint
+jinja2
+pytest
+pyarrow

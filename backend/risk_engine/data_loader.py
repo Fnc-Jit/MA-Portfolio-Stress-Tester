@@ -20,6 +20,13 @@ CRISIS_WINDOWS = {
     "hike_2022":     ("2022-01-01", "2022-10-31"),
 }
 
+def strip_timezone(index: pd.Index) -> pd.Index:
+    """Safely converts timezone-aware DatetimeIndex to timezone-naive."""
+    idx = pd.to_datetime(index)
+    if hasattr(idx, "tz") and idx.tz is not None:
+        return idx.tz_localize(None)
+    return idx
+
 def fetch_prices(tickers: list[str], start: str = "2005-01-01", end: str | None = None) -> pd.DataFrame:
     """
     Pull daily adjusted close prices for all tickers, cache to parquet, and return a wide DataFrame.
@@ -71,8 +78,8 @@ def fetch_prices(tickers: list[str], start: str = "2005-01-01", end: str | None 
         if missing_tickers:
             raise ValueError(f"Failed to fetch data for ticker(s): {', '.join(missing_tickers)}")
             
-        # Standardize index
-        prices.index = pd.to_datetime(prices.index)
+        # Standardize index and strip timezone
+        prices.index = strip_timezone(prices.index)
         prices = prices[sorted_tickers]  # Keep specified order
         
         # Check for empty columns or all-NaNs
@@ -97,6 +104,8 @@ def generate_synthetic_macro(dates: pd.DatetimeIndex) -> pd.DataFrame:
     Used as a fallback when FRED API key is missing or calls fail.
     """
     logger.warning("Using synthetic macro factors as fallback.")
+    # Ensure dates is timezone naive
+    dates = strip_timezone(dates)
     n_days = len(dates)
     np.random.seed(42)  # For reproducibility
     
@@ -147,8 +156,10 @@ def fetch_macro_factors(fred_api_key: str | None = None, start: str = "2005-01-0
     """
     api_key = fred_api_key or os.getenv("FRED_API_KEY")
     
-    # If target_dates is not provided, make a default range
-    if target_dates is None:
+    # If target_dates is provided, strip timezone. Otherwise make default range.
+    if target_dates is not None:
+        target_dates = strip_timezone(target_dates)
+    else:
         target_dates = pd.date_range(start=start, end=pd.Timestamp.now(), freq='B')
         
     if not api_key:
@@ -179,7 +190,7 @@ def fetch_macro_factors(fred_api_key: str | None = None, start: str = "2005-01-0
         for name, code in series.items():
             try:
                 s = fred.get_series(code, start)
-                s.index = pd.to_datetime(s.index)
+                s.index = strip_timezone(s.index)
                 data_dict[name] = s
             except Exception as e:
                 logger.warning(f"Failed to fetch {name} ({code}) from FRED: {str(e)}. Attempting alternatives...")
@@ -187,7 +198,7 @@ def fetch_macro_factors(fred_api_key: str | None = None, start: str = "2005-01-0
                 if name == "usd":
                     try:
                         s = fred.get_series("DTWEXAFEGS", start)  # Alternate USD index
-                        s.index = pd.to_datetime(s.index)
+                        s.index = strip_timezone(s.index)
                         data_dict[name] = s
                         continue
                     except:

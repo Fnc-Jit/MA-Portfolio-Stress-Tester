@@ -55,8 +55,8 @@ def test_fetch_macro_factors_with_mock_api(mock_fred_class):
         
     mock_fred_instance.get_series.side_effect = mock_get_series
     
-    # Call fetch_macro_factors with a mock key
-    df_macro = fetch_macro_factors(fred_api_key="mock_key_123", target_dates=dates)
+    # Call fetch_macro_factors with a mock key and specific start date to bypass file cache
+    df_macro = fetch_macro_factors(fred_api_key="mock_key_123", start="2023-01-01", target_dates=dates)
     
     # Assert data loader queried FRED
     assert mock_fred_class.called

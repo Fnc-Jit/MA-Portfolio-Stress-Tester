@@ -10,3 +10,4 @@ out/
 build/
 dist/
 *.parquet
+stress_tester_buildplan.md

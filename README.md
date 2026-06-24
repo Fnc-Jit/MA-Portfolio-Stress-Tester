@@ -1,5 +1,14 @@
 # Multi-Asset Portfolio Stress Tester & Scenario Engine
 
+[![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.13-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000.svg?logo=vercel&logoColor=white)](https://ma-portfolio-stress-tester.vercel.app/)
+[![Tests](https://img.shields.io/badge/Tests-9%20Passed-success.svg?logo=pytest&logoColor=white)](./backend/tests/)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717.svg?logo=github&logoColor=white)](https://github.com/Fnc-Jit/MA-Portfolio-Stress-Tester)
+
+### 🔗 [Live Web App Demo (https://ma-portfolio-stress-tester.vercel.app/)](https://ma-portfolio-stress-tester.vercel.app/)
+
 A production-grade, institutional-scale market risk management platform. This system replicates the daily risk-reporting and stress-testing workflows of investment banks, calculating portfolio Value at Risk (VaR) and Conditional Value at Risk (CVaR) across four independent mathematical methodologies. It regresses assets against macroeconomic factors, replays historical crises, and auto-generates professional risk reports.
 
 ---
@@ -209,7 +218,50 @@ tests/test_report_fallback.py ..                                                
 
 ---
 
-## 5. Local Setup & Execution
+## 5. Risk Engine Validation & Methodology (Audit Results)
+
+To ensure the mathematical integrity, date-alignment structures, and singular matrix recoveries are completely correct and robust against edge cases, we conducted a rigorous mathematical audit. 
+
+For the complete diagnostic outputs, mathematical proofs, and equations, read our **[Audit & Verification Report](./audit_report.md)**.
+
+### A. Model Agreement Check (Real 3-Asset Portfolio)
+In our real-world 3-asset portfolio (`["AAPL", "MSFT", "GOOGL"]`), we observe a healthy and expected divergence between Value at Risk (VaR) estimation methods at the same 95% confidence level:
+* **Parametric VaR (Analytical)**: **$213,000** (assumes light-tailed multivariate normal distribution).
+* **Monte Carlo VaR (Normal)**: **$225,000** (converges toward parametric limits as simulation paths increase).
+* **Monte Carlo VaR (Student-t, df=5)**: **$233,000** (incorporates fat-tailed distribution to model excess kurtosis).
+
+#### Why a ~9% spread is expected and healthy:
+The Parametric and Normal Monte Carlo models assume price returns follow a normal distribution. In real financial markets, asset returns exhibit **excess kurtosis** (fat tails), meaning extreme negative events happen far more frequently than a normal curve predicts. 
+By simulating returns using a **Student-t distribution (df=5)**, our engine properly shifts probability density to the tails, leading to a **~9% higher VaR estimate**. This divergence is a healthy, expected feature of multi-method risk management. If this spread exceeds threshold boundaries, the engine flags a **model divergence warning** to notify the risk manager that the parametric model is underestimating tail risk.
+
+### B. OLS Regression & FRED Timezone Alignment
+Our z-score standardized OLS factor regression of daily asset returns against FRED macro changes (VIX, 10Y Yield, WTI Crude Oil, USD Index) was validated to confirm there are no date-alignment gaps. 
+Joining the price history and factor series produced a perfect **251 aligned trading days** (losing exactly 1 day due to the returns `pct_change()`). The pre-rounding regression coefficients (betas) prove that the regression is mathematically sound and not degenerate:
+
+* **AAPL 10Y Yield (Y10) Beta**: `-0.0007613898`
+* **AAPL Crude Oil (OIL) Beta**: `0.0012782432`
+* **MSFT 10Y Yield (Y10) Beta**: `-0.0004662392`
+* **MSFT Crude Oil (OIL) Beta**: `0.0009659433`
+
+*Note: The zero-beta on the dashboard was purely a display rounding artifact (rounding to 2 decimals), not a calculation bug.*
+
+### C. 2-Asset Toy Portfolio Hand-Calculation
+We ran the engine against a synthetic bivariate normal returns dataset of 500 trading days for two assets (Asset A and B with daily vols of 2% and 3%, correlation of 0.50, weights of 50/50, and portfolio value of $1,000,000). The engine's output matches standard textbook math with **zero absolute error**:
+
+| Risk Metric | Hand-Calculated Value | Engine Output Value | Absolute Error |
+| :--- | :--- | :--- | :--- |
+| **Daily Expected Return** | `0.00200255` | `0.00200255` | `0.00000000e+00` |
+| **Daily Volatility ($\sigma_p$)** | `0.02107383` | `0.02107383` | `0.00000000e+00` |
+| **Parametric VaR 95% (USD)** | `$34,663.36987539` | `$34,663.36987539` | `0.00000000e+00` |
+| **Parametric CVaR 95% (USD)** | `$43,469.26426873` | `$43,469.26426873` | `0.00000000e+00` |
+
+### D. Covariance Matrix PSD Check & Cholesky Fallback
+To prevent simulation crashes on short or degenerate price series, the engine includes a **ridge-adjustment and spectral reconstruction fallback**. 
+If a user requests a degenerate lookback window (e.g. 3 days) where the $3 \times 3$ covariance matrix is singular (not positive-definite), the engine automatically detects this, applies diagonal adjustments ($\Sigma_{ii} + \epsilon$) to force eigenvalues to be positive, and successfully runs the Cholesky decomposition ($L L^T$). This allows the Monte Carlo simulation to execute cleanly without throwing a linear algebra error.
+
+---
+
+## 6. Local Setup & Execution
 
 ### 1. Installation
 ```bash

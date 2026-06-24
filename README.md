@@ -1,11 +1,11 @@
 # Multi-Asset Portfolio Stress Tester & Scenario Engine
 
-[![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.13-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000.svg?logo=vercel&logoColor=white)](https://ma-portfolio-stress-tester.vercel.app/)
-[![Tests](https://img.shields.io/badge/Tests-9%20Passed-success.svg?logo=pytest&logoColor=white)](./backend/tests/)
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717.svg?logo=github&logoColor=white)](https://github.com/Fnc-Jit/MA-Portfolio-Stress-Tester)
+[![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://ma-portfolio-stress-tester.vercel.app/)
+[![Tests](https://img.shields.io/badge/Tests-9%20Passed-4BC51D?style=for-the-badge&logo=pytest&logoColor=white)](./backend/tests/)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Fnc-Jit/MA-Portfolio-Stress-Tester)
 
 ### 🔗 [Live Web App Demo (https://ma-portfolio-stress-tester.vercel.app/)](https://ma-portfolio-stress-tester.vercel.app/)
 
@@ -17,48 +17,22 @@ A production-grade, institutional-scale market risk management platform. This sy
 
 ## 1. System Architecture & Data Flow
 
+<p align="center">
+
+```mermaid
+flowchart TD
+    A["Frontend Client<br/>(React / Vite)"] -->|HTTP POST<br/>JSON Payload| B["Backend API<br/>(FastAPI)"]
+    B -->|Orchestrates modules| C["Core Risk Engine Layer"]
+    C --> D["1. Data Loader & Ingestion<br/>(data_loader.py)"]
+    D -->|pct_changes & returns| E["2. Mathematical Engines"]
+    E --> E1["parametric_var.py"]
+    E --> E2["monte_carlo_var.py"]
+    E --> E3["historical_replay.py"]
+    E --> E4["factor_shock.py"]
+    E -->|metrics data| F["3. Metrics & Analysis<br/>(metrics.py & report.py)"]
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                     FRONTEND CLIENT (React / Vite)                     │
-│  - Captures Tickers, Weights, Horizon, Client Name, Client Age, Shocks │
-│  - Renders Interactive charts via Recharts components                  │
-│  - Displays Stock Ticker Autocomplete suggestions while typing         │
-│  - Requests PDF reports from the backend                               │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ HTTP POST (JSON Payload)
-┌───────────────────────────────────▼────────────────────────────────────┐
-│                        BACKEND API (FastAPI)                           │
-│  - Validates portfolio tickers, weights (sum to 100%), name & age       │
-│  - Exposes /portfolio/validate, /risk/compute, and /risk/report        │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ Orchestrates modules
-┌───────────────────────────────────▼────────────────────────────────────┐
-│                        CORE RISK ENGINE LAYER                          │
-│                                                                        │
-│   ┌────────────────────────────────────────────────────────────────┐   │
-│   │ 1. DATA LOADER & INGESTION (data_loader.py)                     │   │
-│   │    - Pulls yfinance adjusted closes. caches locally as Parquet │   │
-│   │    - Fetches FRED macro indices (VIX, 10Y, USD, Oil)           │   │
-│   │    - FALLBACK: Generates synthetic macro data if API key fails │   │
-│   └────────────────────────────────┬───────────────────────────────┘   │
-│                                    │ pct_changes & returns             │
-│   ┌────────────────────────────────▼───────────────────────────────┐   │
-│   │ 2. MATHEMATICAL ENGINES                                        │   │
-│   │    ├── parametric_var.py   --> Analytical Covariance Math      │   │
-│   │    ├── monte_carlo_var.py  --> Cholesky normal & Student-t df=5│   │
-│   │    ├── historical_replay.py--> Replay GFC, COVID, Taper, 2022  │   │
-│   │    └── factor_shock.py     --> OLS standardized macro beta     │   │
-│   └────────────────────────────────┬───────────────────────────────┘   │
-│                                    │ metrics data                      │
-│   ┌────────────────────────────────▼───────────────────────────────┐   │
-│   │ 3. METRICS & ANALYSIS (metrics.py & report.py)                 │   │
-│   │    - Evaluates Sharpe Ratio, Annualized Volatility, Drawdowns  │   │
-│   │    - Cross-validates models & checks for tail risk anomalies   │   │
-│   │    - Renders PDF reports using WeasyPrint (with xhtml2pdf      │   │
-│   │      fallback if native system libraries are missing)          │   │
-│   └────────────────────────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────────────────────────┘
-```
+
+</p>
 
 ---
 

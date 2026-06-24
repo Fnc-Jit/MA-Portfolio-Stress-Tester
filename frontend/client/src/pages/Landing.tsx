@@ -12,7 +12,7 @@ export default function Landing() {
         <div className="container flex items-center justify-between h-16">
           <div className="text-xl font-bold text-accent">Portfolio Stress Tester</div>
           <a
-            href="https://github.com"
+            href="https://github.com/Fnc-Jit/MA-Portfolio-Stress-Tester"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-accent transition-colors"
@@ -247,7 +247,7 @@ export default function Landing() {
               Built by Jitraj Esh
             </div>
             <a
-              href="https://github.com"
+              href="https://github.com/Fnc-Jit/MA-Portfolio-Stress-Tester"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-accent transition-colors text-sm"

@@ -236,14 +236,19 @@ Below is the cross-model validation dashboard showing high agreement across all 
 
 ![Multi-Model Risk Engine Comparison](./asset/Method%20Comparison.png)
 
-In our real-world 3-asset portfolio (`["AAPL", "MSFT", "GOOGL"]`), we observe a healthy and expected divergence between Value at Risk (VaR) estimation methods at the same 95% confidence level:
-* **Parametric VaR (Analytical)**: **$213,000** (assumes light-tailed multivariate normal distribution).
-* **Monte Carlo VaR (Normal)**: **$225,000** (converges toward parametric limits as simulation paths increase).
-* **Monte Carlo VaR (Student-t, df=5)**: **$233,000** (incorporates fat-tailed distribution to model excess kurtosis).
+In our real-world 3-asset portfolio (`["AAPL", "MSFT", "GOOGL"]` with a $10,000 portfolio value), we observe a healthy and mathematically consistent relationship between Value at Risk (VaR) estimation methods at the 95% confidence level:
+* **Parametric VaR (Analytical)**: **$233.26** (2.33%, assumes a multivariate normal distribution).
+* **Monte Carlo VaR (Normal)**: **$225.12** (2.25%, converges toward the parametric analytical limit).
+* **Monte Carlo VaR (Student-t, df=5)**: **$213.34** (2.13%, models fat-tailed behavior).
 
-#### Why a ~9% spread is expected and healthy:
-The Parametric and Normal Monte Carlo models assume price returns follow a normal distribution. In real financial markets, asset returns exhibit **excess kurtosis** (fat tails), meaning extreme negative events happen far more frequently than a normal curve predicts. 
-By simulating returns using a **Student-t distribution (df=5)**, our engine properly shifts probability density to the tails, leading to a **~9% higher VaR estimate**. This divergence is a healthy, expected feature of multi-method risk management. If this spread exceeds threshold boundaries, the engine flags a **model divergence warning** to notify the risk manager that the parametric model is underestimating tail risk.
+#### Why the Student-t VaR is lower at 95% but higher at 99% (The Crossover Effect):
+A common misconception is that a fat-tailed distribution (like the Student-t) must yield a higher VaR at *all* confidence levels. In reality, because a Student-t distribution has heavier tails, it shifts probability mass to the extreme ends of the distribution (the >99% region). To preserve a total probability of 1.0, this fat-tailed behavior makes the center of the distribution more peaked, causing the **95% quantile** to be closer to the mean than under a normal distribution.
+
+Mathematically, when both distributions are standardized to have the same volatility (variance = 1.0):
+* At the **95% confidence level**, the normal distribution quantile is **$1.645$**, whereas the standardized Student-t ($df=5$) quantile is only **$1.561$** (resulting in a lower 95% VaR of **$213.34** vs **$233.26**).
+* At the **99% confidence level**, the normal distribution quantile is **$2.326$**, whereas the standardized Student-t ($df=5$) quantile crosses over to **$2.606$**—representing a significantly higher VaR under extreme tail stress.
+
+This crossover behavior is a healthy, expected feature of rigorous multi-method risk management, demonstrating the engine's precision in modeling tail risk.
 
 ### B. OLS Regression & FRED Timezone Alignment
 Our z-score standardized OLS factor regression of daily asset returns against FRED macro changes (VIX, 10Y Yield, WTI Crude Oil, USD Index) was validated to confirm there are no date-alignment gaps. 
